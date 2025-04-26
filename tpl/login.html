@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"],
+        .login-container input[type="text"].captcha {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-container input[type="submit"] {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .login-container input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .captcha-container {
+            display: flex;
+            position: relative;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .captcha-container .captcha {
+            cursor: pointer;
+            width: 60px !important;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .captcha-container #captcha-tips {
+            display: none;
+            position: absolute;
+            right: -198px;
+            cursor: pointer;
+        }
+    </style>
+    <script src="../static/js/jquery-1.12.4.min.js"></script>
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>登录</h2>
+        <form action="checkLogin" method="post">
+            <input type="text" name="username" placeholder="用户名" required>
+            <input type="password" name="password" placeholder="密码" required>
+            <div class="captcha-container">
+                <input type="text" name="captcha" placeholder="验证码" required>
+                <input type="text" class="captcha" value="{{.captcha}}" readonly>
+                <label id="captcha-tips">看不清楚？点击更换一张</label>
+            </div>
+            <input type="submit" value="登录">
+        </form>
+    </div>
+
+    <script>
+        // 验证码提示信息
+        const $captcha = $(".captcha")
+        const $tips = $("#captcha-tips")
+        $captcha.on("mouseover", function () {
+            $tips.css({ "display": "block" })
+        })
+
+        $captcha.on("mouseout", function () {
+            $tips.css({ "display": "none" })
+        })
+
+        // 修改验证码
+        const changeCaptcha = function (data) {
+            $tips.text(data)
+        }
+
+        $captcha.on("click", function () {
+            // ajax请求服务器验证码
+            $.get("/getCaptcha", function (data) {
+                $captcha.val(data)
+            })
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="keywords"
+        content="tailwind,tailwindcss,tailwind css,css,starter template,free template,admin templates, admin template, admin dashboard, free tailwind templates, tailwind example">
+    <!-- Css -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/all.css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i,700,700i" rel="stylesheet">
+    <title>yuko费用报销系统</title>
+</head>
+
+<body>
+    <!--Container -->
+    <div class="mx-auto bg-grey-400">
+        <!--Screen-->
+        <div class="min-h-screen flex flex-col">
+            {{template "header.html" .}}
+
+            <div class="flex flex-1">
+                {{template "sidebar.html"}}
+                <!--Main-->
+                <main class="bg-white-300 flex-1 p-3 overflow-hidden">
+
+                    <div class="flex flex-1 flex-col md:flex-row lg:flex-row mx-2">
+                        <div class="mb-2 border-solid border-gray-300 rounded border shadow-sm w-full">
+                            <div class="bg-gray-200 px-2 py-3 border-solid border-gray-200 border-b">
+                                新增报销单
+                            </div>
+                            <div class="p-3">
+                                <form id="addExpenseForm" class="w-full" enctype="multipart/form-data">
+                                    <!-- 报销原因 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full px-3">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="reason">
+                                                报销原因<span class="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+                                                id="reason" name="reason" type="text" placeholder="请输入报销原因" required>
+                                        <span class="error-message text-red-500" style="display: none;">请输入报销原因</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 报销金额 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full px-3">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="amount">
+                                                报销金额 (¥)<span class="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+                                                id="amount" name="amount" type="number" step="0.01" min="0"
+                                                placeholder="请输入金额" required>
+                                        <span class="error-message text-red-500" style="display: none;">请输入报销金额</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 报销时间（选择到秒）-->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full px-3">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="date">
+                                                报销时间<span class="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+                                                id="date" name="date" type="datetime-local" step="1" required>
+                                        <span class="error-message text-red-500" style="display: none;">请选择报销时间</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 附件上传 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full px-3 mb-6 md:mb-0">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="attachments">
+                                                上传附件 (支持文件选择或直接Ctrl+V粘贴)
+                                            </label>
+                                            <input
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+                                                id="attachments" name="attachments[]" type="file" multiple>
+                                            <div id="preview-container" class="flex flex-wrap gap-2 mt-2"></div>
+                                            <div id="file-list" class="mt-2"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 备注 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full px-3">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="remarks">
+                                                备注 (可选)
+                                            </label>
+                                            <textarea
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+                                                id="remarks" name="remarks" rows="4" placeholder="请输入备注信息"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- 提交按钮 -->
+                                    <div class="flex items-center justify-end">
+                                        <button type="submit" id="submitBtn"
+                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                                            <span>提交</span>
+                                            <div id="loading-spinner" class="ml-2 hidden">
+                                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        // 在页面加载时移除所有输入框的红色边框样式
+                        window.addEventListener('load', function () {
+                            const inputs = document.querySelectorAll('input, textarea');
+                            inputs.forEach(input => {
+                                input.classList.remove('border-red-500');
+                            });
+                        });
+
+                        // 监听日期选择器的change事件
+                        const dateInput = document.querySelector('#date');
+                        dateInput.addEventListener('change', function () {
+                            this.blur(); // 使日期选择器失去焦点，从而自动关闭
+                        });
+
+
+                        document.getElementById('addExpenseForm').addEventListener('submit', function (event) {
+                            event.preventDefault();
+                            const form = this;
+                            const formData = new FormData(form);
+                            let isValid = true;
+
+                            // 获取提交按钮和加载动画元素
+                            const submitBtn = document.getElementById('submitBtn');
+                            const loadingSpinner = document.getElementById('loading-spinner');
+                            
+                            // 验证报销原因
+                            const reasonInput = form.querySelector('#reason');
+                            const reasonError = form.querySelector('#reason + .error-message');
+                            if (!reasonInput.value) {
+                                reasonInput.classList.add('border-red-500');
+                                reasonError.style.display = 'block';
+                                isValid = false;
+                            } else {
+                                reasonInput.classList.remove('border-red-500');
+                                reasonError.style.display = 'none';
+                            }
+
+                            // 验证报销金额
+                            const amountInput = form.querySelector('#amount');
+                            const amountError = form.querySelector('#amount + .error-message');
+                            if (!amountInput.value) {
+                                amountInput.classList.add('border-red-500');
+                                amountError.style.display = 'block';
+                                isValid = false;
+                            } else {
+                                amountInput.classList.remove('border-red-500');
+                                amountError.style.display = 'none';
+                            }
+
+                            // 验证报销时间
+                            const dateInput = form.querySelector('#date');
+                            const dateError = form.querySelector('#date + .error-message');
+                            if (!dateInput.value) {
+                                dateInput.classList.add('border-red-500');
+                                dateError.style.display = 'block';
+                                isValid = false;
+                            } else {
+                                dateInput.classList.remove('border-red-500');
+                                dateError.style.display = 'none';
+                            }
+                            if (isValid) {
+                                // 禁用提交按钮并显示加载动画
+                                submitBtn.disabled = true;
+                                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                loadingSpinner.classList.remove('hidden');
+
+                                fetch('/add_expense_report', {
+                                    method: 'POST',
+                                    body: formData,
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.error) {
+                                            alert('新增报销单失败: ' + data.error);
+                                            // 恢复提交按钮状态
+                                            submitBtn.disabled = false;
+                                            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                            loadingSpinner.classList.add('hidden');
+                                        } else {
+                                            alert('报销单新增成功！');
+                                            window.location.reload();
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('请求出错:', error);
+                                        alert('新增报销单失败，请稍后再试。');
+                                        // 恢复提交按钮状态
+                                        submitBtn.disabled = false;
+                                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                        loadingSpinner.classList.add('hidden');
+                                    });
+                            }
+                        });
+
+                        // 文件预览和管理功能
+                        function handleFiles(files) {
+                            const previewContainer = document.getElementById('preview-container');
+                            const fileList = document.getElementById('file-list');
+                            
+                            Array.from(files).forEach(file => {
+                                if (file.type.startsWith('image/')) {
+                                    // 处理图片文件
+                                    const preview = document.createElement('div');
+                                    preview.className = 'relative';
+                                    
+                                    const img = document.createElement('img');
+                                    img.src = URL.createObjectURL(file);
+                                    img.className = 'h-20 w-20 object-cover rounded';
+                                    
+                                    const deleteBtn = document.createElement('button');
+                                    deleteBtn.innerHTML = '×';
+                                    deleteBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600';
+                                    
+                                    preview.appendChild(img);
+                                    preview.appendChild(deleteBtn);
+                                    previewContainer.appendChild(preview);
+                                    
+                                    deleteBtn.onclick = () => removeFile(file, preview);
+                                } else {
+                                    // 处理非图片文件
+                                    const fileItem = document.createElement('div');
+                                    fileItem.className = 'flex items-center justify-between p-2 bg-gray-100 rounded mb-2';
+                                    
+                                    const fileName = document.createElement('span');
+                                    fileName.textContent = file.name;
+                                    fileName.className = 'truncate flex-1';
+                                    
+                                    const deleteBtn = document.createElement('button');
+                                    deleteBtn.innerHTML = '×';
+                                    deleteBtn.className = 'ml-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600';
+                                    
+                                    fileItem.appendChild(fileName);
+                                    fileItem.appendChild(deleteBtn);
+                                    fileList.appendChild(fileItem);
+                                    
+                                    deleteBtn.onclick = () => removeFile(file, fileItem);
+                                }
+                            });
+                        }
+
+                        // 移除文件的通用函数
+                        function removeFile(fileToRemove, element) {
+                            const input = document.getElementById('attachments');
+                            const dt = new DataTransfer();
+                            
+                            // 重新构建FileList，排除被删除的文件
+                            Array.from(input.files).forEach(file => {
+                                if (file !== fileToRemove) {
+                                    dt.items.add(file);
+                                }
+                            });
+                            
+                            input.files = dt.files;
+                            element.remove();
+                        }
+
+                        // 监听文件选择
+                        document.getElementById('attachments').addEventListener('change', function(event) {
+                            handleFiles(this.files);
+                        });
+
+                        // 监听粘贴事件
+                        document.addEventListener('paste', function(event) {
+                            const items = event.clipboardData.items;
+                            
+                            for (let i = 0; i < items.length; i++) {
+                                if (items[i].type.indexOf('image') !== -1) {
+                                    const file = items[i].getAsFile();
+                                    const fileName = `pasted-image-${new Date().getTime()}.png`;
+                                    const newFile = new File([file], fileName, { type: file.type });
+                                    
+                                    // 将新文件添加到现有文件列表中
+                                    const dt = new DataTransfer();
+                                    const input = document.getElementById('attachments');
+                                    
+                                    // 添加现有文件
+                                    Array.from(input.files).forEach(f => dt.items.add(f));
+                                    // 添加新粘贴的文件
+                                    dt.items.add(newFile);
+                                    
+                                    input.files = dt.files;
+                                    handleFiles([newFile]); // 只处理新粘贴的文件
+                                }
+                            }
+                        });
+                    </script>
+
+
+
+
+                </main>
+                <!--/Main-->
+            </div>
+
+
+        </div>
+
+    </div>
+
+    {{template "showModal.html"}}
+    <script src="/static/js/main.js"></script>
+
+
+
+
+</body>
+
+</html>

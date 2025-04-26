@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="keywords"
+        content="tailwind,tailwindcss,tailwind css,css,starter template,free template,admin templates, admin template, admin dashboard, free tailwind templates, tailwind example">
+    <!-- Css -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/all.css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i,700,700i" rel="stylesheet">
+    <title>yuko费用报销系统</title>
+</head>
+
+<body>
+    <!--Container -->
+    <div class="mx-auto bg-grey-400">
+        <!--Screen-->
+        <div class="min-h-screen flex flex-col">
+            {{template "header.html" .}}
+
+            <div class="flex flex-1">
+                {{template "sidebar.html"}}
+                <!--Main-->
+                <main class="bg-white-300 flex-1 p-3 overflow-hidden">
+
+                    <div class="flex flex-col">
+                        <!-- Stats Row Starts Here -->
+                        <div class="flex flex-1 flex-col md:flex-row lg:flex-row mx-2">
+                            <div
+                                class="shadow-lg bg-red-vibrant border-l-8 hover:bg-red-vibrant-dark border-red-vibrant-dark mb-2 p-2 md:w-1/4 mx-2">
+                                <div class="p-4 flex flex-col">
+                                    <a class="no-underline text-white text-2xl">
+                                        {{.expense_report_count}}
+                                    </a>
+                                    <a class="no-underline text-white text-lg">
+                                        已报销总数
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div
+                                class="shadow bg-info border-l-8 hover:bg-info-dark border-info-dark mb-2 p-2 md:w-1/4 mx-2">
+                                <div class="p-4 flex flex-col">
+                                    <a class="no-underline text-white text-2xl">
+                                        ￥{{.total_reimbursed_amount}}
+                                    </a>
+                                    <a class="no-underline text-white text-lg">
+                                        已报销金额
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div
+                                class="shadow bg-warning border-l-8 hover:bg-warning-dark border-warning-dark mb-2 p-2 md:w-1/4 mx-2">
+                                <div class="p-4 flex flex-col">
+                                    <a class="no-underline text-white text-2xl">
+                                        {{.pending_expense_report_count}}
+                                    </a>
+                                    <a class="no-underline text-white text-lg">
+                                        待报销总数
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div
+                                class="shadow bg-success border-l-8 hover:bg-success-dark border-success-dark mb-2 p-2 md:w-1/4 mx-2">
+                                <div class="p-4 flex flex-col">
+                                    <a class="no-underline text-white text-2xl">
+                                        ￥{{.pending_expense_report_amount}}
+                                    </a>
+                                    <a class="no-underline text-white text-lg">
+                                        待报销金额
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- /Stats Row Ends Here -->
+
+                        <!-- Card Sextion Starts Here -->
+                        <div class="flex flex-1 flex-col md:flex-row lg:flex-row mx-2">
+
+                            <!-- card -->
+
+                            <div class="rounded overflow-hidden shadow bg-white mx-2 w-full">
+                                <div class="px-6 py-2 border-b border-light-grey">
+                                    <div class="font-bold text-xl">报销单速览</div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table text-grey-darkest">
+                                        <thead class="bg-grey-dark text-white text-normal">
+                                            <tr>
+                                                <th scope="col">报销单 ID</th>
+                                                <th scope="col">报销原因</th>
+                                                <th scope="col">报销时间</th>
+                                                <th scope="col">报销人</th>
+                                                <th scope="col">备注</th>
+                                                <th scope="col">附件</th>
+                                                <th scope="col">报销金额</th>
+                                                <th scope="col">状态</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="expenseReports">
+                                            {{range .expense_reports}}
+                                            <tr>
+                                                <td>{{.Report_id}}</td>
+                                                <td>{{.Reason}}</td>
+                                                <td>{{.Report_time}}</td>
+                                                <td>{{.Username}}</td>
+                                                <td>{{.Remarks}}</td>
+                                                <td>
+                                                    {{if eq .Has_attachment 1}}
+                                                    <a href="javascript:void(0);"
+                                                        class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500hover:border-transparent rounded"
+                                                        onclick="fetchFiles({{.Report_id}})">查看附件</a>
+                                                    {{else}}
+                                                    无附件
+                                                    {{end}}
+                                                </td>
+
+                                                <td>¥{{printf "%.2f" .Amount}}</td>
+                                                <td>{{if eq .Status 0}}待审批{{else if eq .Status 1}}已通过{{else if eq
+                                                    .Status 2}}驳回{{else}}报销人撤回{{end}}</td>
+                                            </tr>
+                                            {{end}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- 分页控件 -->
+                                <div class="pagination-container">
+                                    {{if gt .prevPage 1}}
+                                    <button onclick="loadExpenseReports({{.prevPage}})"
+                                        class="bg-gray-200 hover:bg-gray-500 text-gray-900 font-bold py-2 px-4 rounded-l">上一页</button>
+                                    {{end}}
+                                    <span>第 {{.prevPage}} 页 / 共 {{.totalPages}} 页</span>
+                                    {{if le .nextPage .totalPages}}
+                                    {{if eq .totalPages 1}}
+                                    {{else}}
+                                    <button onclick="loadExpenseReports({{.nextPage}})"
+                                        class="bg-gray-200 hover:bg-gray-500 text-gray-900 font-bold py-2 px-4 rounded-r">下一页</button>
+                                    {{end}}
+                                    {{end}}
+                                </div>
+                            </div>
+
+
+
+
+                            <!-- /card -->
+
+                        </div>
+                        <!-- /Cards Section Ends Here -->
+
+
+
+                        <!--/Profile Tabs-->
+                    </div>
+                </main>
+                <!--/Main-->
+            </div>
+
+
+        </div>
+
+    </div>
+
+    {{template "showModal.html"}}
+    <script src="/static/js/main.js"></script>
+    <!-- 引入 jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function loadExpenseReports(page) {
+            $.ajax({
+                url: "/expense_reports",
+                method: "POST",
+                data: {
+                    page: page
+                },
+                success: function (response) {
+                    // 更新报销单表格内容
+                    $('#expenseReports').html(response.expense_reports_html);
+
+                    // 更新分页信息
+                    $('.pagination-container').html(response.pagination_html);
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

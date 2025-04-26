@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="keywords"
+        content="tailwind,tailwindcss,tailwind css,css,starter template,free template,admin templates, admin template, admin dashboard, free tailwind templates, tailwind example">
+    <!-- Css -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/all.css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i,700,700i" rel="stylesheet">
+    <title>yuko费用报销系统</title>
+</head>
+
+<body>
+    <!--Container -->
+    <div class="mx-auto bg-grey-400">
+        <!--Screen-->
+        <div class="min-h-screen flex flex-col">
+            {{template "header.html" .}}
+    
+            <div class="flex flex-1">
+                {{template "sidebar.html"}}
+                <!--Main-->
+                <main class="bg-white-300 flex-1 p-3 overflow-hidden">
+    
+                    <div class="flex flex-1 flex-col md:flex-row lg:flex-row mx-2">
+                        <div class="mb-2 border-solid border-gray-300 rounded border shadow-sm w-full">
+                            <div class="bg-gray-200 px-2 py-3 border-solid border-gray-200 border-b">
+                                按条件筛选获取报销单
+                            </div>
+                            <div class="p-3">
+                                <form id="filterForm" class="w-full">
+                                    {{if eq .user.Is_admin 1}}
+                                    <!-- 用户名输入框 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full px-3 relative">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="username">
+                                                用户名
+                                            </label>
+                                            <!-- 隐藏字段，用于提交 user_id -->
+                                            <input type="hidden" id="user_id" name="user_id" value="">
+                                            <input type="text" id="username"
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white"
+                                                placeholder="输入用户名开始筛选或直接留空获取所有用户的报销单" oninput="filterUsernames(this.value)" />
+                                            <!-- 下拉菜单 -->
+                                            <ul id="usernameDropdown"
+                                                class="absolute z-10 bg-white border border-gray-300 w-full rounded mt-1 hidden">
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {{end}}
+    
+                                    <!-- 状态 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full md:w-1/2 px-3">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="status">
+                                                状态
+                                            </label>
+                                            <div class="relative">
+                                                <select name="status" id="status"
+                                                    class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white">
+                                                    <option value="">全部</option>
+                                                    <option value="0">待审批</option>
+                                                    <option value="1">通过</option>
+                                                    <option value="2">驳回</option>
+                                                    <option value="3">撤回</option>
+                                                </select>
+                                                <div
+                                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 20 20">
+                                                        <path
+                                                            d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z">
+                                                        </path>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+    
+                                    <!-- 提交按钮 -->
+                                    <div class="flex flex-wrap -mx-3 mb-2">
+                                        <div class="w-full px-3">
+                                            <button type="button"
+                                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                                onclick="fetchExpenseReports()">
+                                                筛选
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form action="/update_reports" method="POST" class="w-full">
+                        <div class="rounded overflow-hidden shadow bg-white mx-2 w-full">
+                            <div class="px-6 py-2 border-b border-light-grey">
+                                <div class="font-bold text-xl">报销单详情</div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table text-grey-darkest">
+                                    <thead class="bg-grey-dark text-white text-normal">
+                                        <tr>
+                                            <th scope="col">
+                                                <input type="checkbox" id="selectAll" onclick="toggleAllSelections(this)">
+                                            </th>
+                                            <th scope="col">报销单 ID</th>
+                                            <th scope="col">报销原因</th>
+                                            <th scope="col">报销时间</th>
+                                            <th scope="col">报销人</th>
+                                            <th scope="col">备注</th>
+                                            <th scope="col">附件</th>
+                                            <th scope="col">报销金额</th>
+                                            <th scope="col">状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="expenseReports">
+                                        <!-- 动态插入报销单数据 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mb-2 border-solid border-gray-300 rounded border shadow-sm w-full mt-4">
+                            <div class="bg-gray-200 px-2 py-3 border-solid border-gray-200 border-b">
+                                批量操作报销单
+                            </div>
+                            <div class="p-3">
+                                <!-- 状态选择 -->
+                                <div class="flex flex-wrap -mx-3 mb-6">
+                                    <div class="w-full md:w-1/2 px-3">
+                                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                            for="batchStatus">
+                                            修改状态
+                                        </label>
+                                        <div class="relative">
+                                            <select name="status" id="batchStatus"
+                                                class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white">
+                                                <option value="">请选择目标状态</option>
+                                                <option value="0">待审批</option>
+                                                {{if eq .user.Is_admin 1}}
+                                                <option value="1">通过</option>
+                                                <option value="2">驳回</option>
+                                                {{end}}
+                                                {{if eq .user.Is_admin 0}}
+                                                <option value="3">撤回</option>
+                                                {{end}}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center mb-4">
+                                    <span class="text-gray-700 text-sm mr-2">选中报销单总金额：</span>
+                                    <span id="selectedTotalAmount" class="text-lg font-bold text-green-500">0.00</span> 元
+                                </div>
+                                
+                                <!-- 提交按钮 -->
+                                <div class="flex flex-wrap -mx-3 mb-2">
+                                    <div class="w-full px-3">
+                                        <button type="button"
+                                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                            onclick="confirmAndSubmitBatchUpdate()">
+                                            批量修改
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+    
+    
+    
+    
+                </main>
+                <!--/Main-->
+            </div>
+    
+    
+        </div>
+    
+    </div>
+
+    {{template "showModal.html"}}
+    <script src="/static/js/main.js"></script>
+
+
+   
+    {{if eq .user.Is_admin 1}}
+    <script>
+        // 后端传递的用户名列表（在模板中注入）
+        const usernames = [
+            {"id": "", "name": "所有用户"},
+            {{range .usernameList}}
+                {"id": {{.User_id}}, "name": "{{.Username}}"},
+            {{end}}
+        ];
+    
+        // 显示所有用户名
+        function showAllUsernames() {
+            const dropdown = document.getElementById("usernameDropdown");
+            dropdown.innerHTML = ""; // 清空当前列表
+
+            usernames.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = user.name;
+                li.className = "p-2 cursor-pointer hover:bg-gray-200 text-sm";
+                li.onclick = () => {
+                    document.getElementById("username").value = user.name;
+                    document.getElementById('user_id').value = user.id; // 设置隐藏字段
+                    dropdown.classList.add("hidden"); // 点击时隐藏下拉框
+                };
+                dropdown.appendChild(li);
+            });
+
+            dropdown.classList.remove("hidden"); // 显示下拉框
+        }
+
+        // 实时筛选用户名
+        function filterUsernames(query) {
+            const dropdown = document.getElementById("usernameDropdown");
+            dropdown.innerHTML = ""; // 清空当前列表
+
+            // 如果没有输入内容，显示所有用户名
+            if (!query.trim()) {
+                showAllUsernames();
+                return;
+            }
+
+            // 筛选匹配的用户名
+            const filtered = usernames.filter(user =>
+                user.name.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (filtered.length > 0) {
+                filtered.forEach(user => {
+                    const li = document.createElement("li");
+                    li.textContent = user.name;
+                    li.className =
+                        "p-2 cursor-pointer hover:bg-gray-200 text-sm";
+                    li.onclick = () => {
+                        document.getElementById("username").value = user.name;
+                        document.getElementById('user_id').value = user.id; // 设置隐藏字段
+                        dropdown.classList.add("hidden"); // 点击时隐藏下拉框
+                    };
+                    dropdown.appendChild(li);
+                });
+                dropdown.classList.remove("hidden"); // 显示筛选结果
+            } else {
+                const li = document.createElement("li");
+                li.textContent = "无匹配结果";
+                li.className = "p-2 text-gray-500 text-sm";
+                dropdown.appendChild(li);
+                dropdown.classList.remove("hidden");
+            }
+        }
+
+        // 选择用户名时填充输入框，并隐藏下拉框
+        function selectUsername(username, userId) {
+            const usernameInput = document.getElementById('username');
+            const dropdown = document.getElementById('usernameDropdown');
+
+            usernameInput.value = username; // 填充用户名
+            usernameInput.dataset.userId = userId; // 存储对应的用户 ID
+            dropdown.innerHTML = ''; // 清空下拉框
+            dropdown.classList.add('hidden'); // 隐藏下拉框
+        }
+
+
+    </script>
+
+    {{end}}
+
+    <script>
+        function fetchExpenseReports() {
+            const formData = new FormData(document.getElementById("filterForm"));
+
+            fetch("/get_filtered_reports", {
+                method: "POST",
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error) {
+                        alert("获取报销单失败: " + data.error);
+                        return;
+                    }
+
+                    const tbody = document.getElementById("expenseReports");
+                    tbody.innerHTML = ""; // 清空表格内容
+
+                    if (data.reports && data.reports.length > 0) {
+                        data.reports.forEach((report) => {
+                            const row = document.createElement("tr");
+
+                            row.innerHTML = `
+                                    <td>
+                                        <input type="checkbox" class="selectReportCheckbox" value="${report.Report_id}" data-amount="${report.Amount}">
+                                    </td>
+                                    <td>${report.Report_id}</td>
+                                    <td>${report.Reason}</td>
+                                    <td>${new Date(report.Report_time).toLocaleString()}</td>
+                                    <td>${report.Username}</td>
+                                    <td>${report.Remarks || "无"}</td>
+                                    <td>
+                                        ${report.Has_attachment === 1
+                                    ? `<a href="javascript:void(0);" class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded" onclick="fetchFiles(${report.Report_id})">查看附件</a>`
+                                    : "无附件"}
+                                    </td>
+                                    <td>¥${report.Amount.toFixed(2)}</td>
+                                    <td>${getStatusLabel(report.Status)}</td>
+                                `;
+                            tbody.appendChild(row);
+                        });
+
+                        // 绑定复选框事件
+                        const checkboxes = document.querySelectorAll(".selectReportCheckbox");
+                        checkboxes.forEach((cb) => {
+                            cb.addEventListener("change", updateSelectedTotal);
+                        });
+                        
+                        // 更新选中总金额
+                        updateSelectedTotal();
+                       
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500">暂无报销单</td></tr>`;
+                    }
+                })
+                .catch((error) => {
+                    console.error("请求出错: ", error);
+                    alert("无法获取报销单，请稍后再试。");
+                });
+
+        }
+
+        function getStatusLabel(status) {
+            switch (status) {
+                case 0:
+                    return "待审批";
+                case 1:
+                    return "已通过";
+                case 2:
+                    return "驳回";
+                case 3:
+                    return "报销人撤回";
+                default:
+                    return "未知状态";
+            }
+        }
+
+    </script>
+    <script>
+        // 全选/取消全选
+        function toggleAllSelections(checkbox) {
+            const checkboxes = document.querySelectorAll(".selectReportCheckbox");
+            checkboxes.forEach((cb) => {
+                cb.checked = checkbox.checked;
+            });
+            updateSelectedTotal();
+        }
+
+        // 每个复选框点击时更新选择状态
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll(".selectReportCheckbox");
+            const selectedIds = [];
+            checkboxes.forEach((cb) => {
+                if (cb.checked) {
+                    selectedIds.push(cb.value);
+                }
+            });
+
+            console.log("选中的报销单 ID: ", selectedIds);
+        }
+
+        // 更新选中报销单的总金额
+        function updateSelectedTotal() {
+            let totalAmount = 0;
+            const checkboxes = document.querySelectorAll(".selectReportCheckbox:checked");
+            checkboxes.forEach((cb) => {
+                const amount = parseFloat(cb.dataset.amount); // 从 data-amount 属性中读取金额
+                
+                if (!isNaN(amount)) {
+                    totalAmount += amount;
+                }
+            });
+
+            // 更新显示
+            const totalAmountElement = document.getElementById("selectedTotalAmount");
+            totalAmountElement.textContent = totalAmount.toFixed(2);
+        }
+
+        // 确认修改前弹窗
+        function confirmAndSubmitBatchUpdate() {
+            const selectedIds = [];
+            const checkboxes = document.querySelectorAll(".selectReportCheckbox:checked");
+            checkboxes.forEach((cb) => {
+                selectedIds.push(parseInt(cb.value, 10));
+            });
+
+            const status = document.getElementById("batchStatus").value;
+
+            if (selectedIds.length === 0) {
+                alert("请至少选择一条报销单！");
+                return;
+            }
+
+            if (!status) {
+                alert("请选择目标状态！");
+                return;
+            }
+
+            // 获取选中报销单的总金额
+            const totalAmount = parseFloat(document.getElementById("selectedTotalAmount").textContent);
+
+            // 显示确认提示
+            const confirmMessage = `您选择了 ${selectedIds.length} 条报销单，总金额为 ${totalAmount.toFixed(2)} 元。确定要修改吗？`;
+            if (confirm(confirmMessage)) {
+                // 执行批量更新
+                fetch("/update_reports", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        report_ids: selectedIds, // 数组
+                        status: parseInt(status, 10), // 确保是整数
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.error) {
+                            alert("批量修改失败: " + data.error);
+                        } else {
+                            alert("批量修改成功！");
+                            fetchExpenseReports(); // 重新加载报销单数据
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("请求出错: ", error);
+                        alert("无法完成批量修改，请稍后再试。");
+                    });
+            }
+        }
+
+        // 为每个复选框添加事件
+        document.addEventListener("DOMContentLoaded", () => {
+            const checkboxes = document.querySelectorAll(".selectReportCheckbox");
+            checkboxes.forEach((cb) => {
+                cb.addEventListener("change", updateSelectedTotal);
+            });
+            updateSelectedTotal(); // 初始化金额
+        });
+
+    </script>
+
+</body>
+
+</html>

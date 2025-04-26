@@ -1,0 +1,114 @@
+<div id="showModal" class="modal-wrapper modal-is-open" style="display: none;">
+    <div class="overlay close-modal"></div>
+    <div class="modal modal-lg">
+        <div class="modal-content shadow-lg p-5">
+            <div class="border-b p-2 pb-3 pt-0 mb-4">
+                <div class="flex justify-between items-center">
+                    附件详情
+                    <span class="close-modal cursor-pointer px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-times text-gray-700"></i>
+                    </span>
+                </div>
+            </div>
+            <!-- Modal content -->
+            <div id="show-modal-body"></div>
+        </div>
+    </div>
+</div>
+<script>
+    // 发送请求获取文件信息
+    function fetchFiles(reportID) {
+        fetch(`/get_files?report_id=${reportID}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                showFilesInModal(data.files); // 渲染模态框
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('无法加载文件信息');
+            });
+    }
+
+    // 展示文件信息到模态框
+    function showFilesInModal(files) {
+        var modal = document.getElementById("showModal");
+        var modalBody = document.getElementById("show-modal-body");
+
+        // 清空模态框内容
+        modalBody.innerHTML = '';
+
+        // 如果是图片，直接展示；否则用表格展示
+        var tableHtml = `
+            <div class="flex flex-1 flex-col md:flex-row lg:flex-row mx-2">
+                <div class="mb-2 border-solid border-gray-300 rounded border shadow-sm w-full">
+                    <div class="bg-gray-200 px-2 py-3 border-solid border-gray-200 border-b">
+                        其他附件
+                    </div>
+                    <div class="p-3">
+                        <table class="table-responsive w-full rounded">
+                            <thead>
+                                <tr>
+                                    <th class="border w-1/4 px-4 py-2">文件名</th>
+                                    <th class="border w-1/6 px-4 py-2">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+
+        // 遍历文件列表
+        files.forEach(file => {
+            if (file.is_image) {
+                // 如果是图片，直接展示
+                var imgHtml = `<img src="${file.file_path}" style="width:100%; margin-bottom: 10px;" alt="${file.file_name}"/>`;
+                modalBody.innerHTML += imgHtml;
+            } else {
+                // 如果是其他文件，添加到表格中
+                tableHtml += `
+                    <tr>
+                        <td class="border px-4 py-2">${file.file_name}</td>
+                        <td class="border px-4 py-2">
+                            <a href="${file.file_path}" target="_blank" class="bg-gray-200 hover:bg-gray-500 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
+                                <svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"></path>
+                                </svg>
+                                <span>下载</span>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 将表格添加到模态框
+        modalBody.innerHTML += tableHtml;
+
+        // 打开模态框
+        modal.style.display = "block";
+        // 添加 .modal-is-open 类并显示模态框
+        modal.classList.add("modal-is-open");
+    }
+
+    // 关闭模态框
+    function closeModal() {
+        var modal = document.getElementById("showModal");
+        modal.style.display = "none";
+
+        // 清空模态框内容，确保下次打开时重新加载
+        var modalBody = document.getElementById("show-modal-body");
+        modalBody.innerHTML = '';
+    }
+
+</script>
