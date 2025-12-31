@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+
 	"yukoreimburse/database"
 	"yukoreimburse/lark"
 	"yukoreimburse/tools"
@@ -244,8 +245,8 @@ func GetPendingExpenseReportsAmount(user_id int, is_admin int) (float64, error) 
 	return totalAmount, nil
 }
 
-// 按用户 ID 和状态筛选所有报销单（不分页）
-func GetFilteredExpenseReports(user_id *int, status *int) ([]Expense_reports, error) {
+// 按用户 ID、状态及时间范围筛选所有报销单（不分页）
+func GetFilteredExpenseReports(user_id *int, status *int, startTime *time.Time, endTime *time.Time) ([]Expense_reports, error) {
 	// 初始化空的报销单列表
 	var expense_reports []Expense_reports
 
@@ -280,6 +281,14 @@ func GetFilteredExpenseReports(user_id *int, status *int) ([]Expense_reports, er
 	if status != nil {
 		conditions = append(conditions, "e.status = ?")
 		args = append(args, *status)
+	}
+	if startTime != nil {
+		conditions = append(conditions, "e.report_time >= ?")
+		args = append(args, *startTime)
+	}
+	if endTime != nil {
+		conditions = append(conditions, "e.report_time <= ?")
+		args = append(args, *endTime)
 	}
 
 	// 如果有条件，添加 WHERE 子句

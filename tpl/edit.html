@@ -84,6 +84,28 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- 时间范围 -->
+                                    <div class="flex flex-wrap -mx-3 mb-6">
+                                        <div class="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="start_date">
+                                                开始日期
+                                            </label>
+                                            <input type="date" name="start_date" id="start_date"
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" />
+                                        </div>
+                                        <div class="w-full md:w-1/2 px-3">
+                                            <label
+                                                class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
+                                                for="end_date">
+                                                结束日期
+                                            </label>
+                                            <input type="date" name="end_date" id="end_date"
+                                                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" />
+                                        </div>
+                                    </div>
     
                                     <!-- 提交按钮 -->
                                     <div class="flex flex-wrap -mx-3 mb-2">
@@ -279,6 +301,13 @@
 
     <script>
         function fetchExpenseReports() {
+            const startDate = document.getElementById("start_date").value;
+            const endDate = document.getElementById("end_date").value;
+            if (startDate && endDate && startDate > endDate) {
+                alert("开始日期不能晚于结束日期");
+                return;
+            }
+
             const formData = new FormData(document.getElementById("filterForm"));
 
             fetch("/get_filtered_reports", {

@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+
 	// "path/filepath"
 	"strconv"
+	"time"
 	"yukoreimburse/files"
 	"yukoreimburse/reimbursements"
 	"yukoreimburse/tools"
@@ -330,6 +332,8 @@ func main() {
 	r.POST("/get_filtered_reports", func(ctx *gin.Context) {
 		var user_id *int
 		var status *int
+		var startTime *time.Time
+		var endTime *time.Time
 
 		// 从表单获取字符串值
 		if user.Is_admin == 1 {
@@ -359,8 +363,31 @@ func main() {
 			status = &s
 		}
 
+		// 解析开始日期
+		startDateStr := ctx.PostForm("start_date")
+		if startDateStr != "" {
+			t, err := time.ParseInLocation("2006-01-02", startDateStr, time.Local)
+			if err != nil {
+				ctx.JSON(400, gin.H{"error": "开始日期格式错误"})
+				return
+			}
+			startTime = &t
+		}
+
+		// 解析结束日期，追加到当日 23:59:59
+		endDateStr := ctx.PostForm("end_date")
+		if endDateStr != "" {
+			t, err := time.ParseInLocation("2006-01-02", endDateStr, time.Local)
+			if err != nil {
+				ctx.JSON(400, gin.H{"error": "结束日期格式错误"})
+				return
+			}
+			endOfDay := t.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+			endTime = &endOfDay
+		}
+
 		// 获取筛选结果
-		reports, err := reimbursements.GetFilteredExpenseReports(user_id, status)
+		reports, err := reimbursements.GetFilteredExpenseReports(user_id, status, startTime, endTime)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": "获取报销单失败: " + err.Error()})
 			return
