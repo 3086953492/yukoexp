@@ -23,10 +23,11 @@ func main() {
 	// 加载静态资源
 	r.StaticFS("/static", http.Dir("./static"))
 
-	attachmentDir := "/attachments"
+	// 对外 URL 与磁盘目录需一致；上传落盘见 tools.AttachmentReportDir
+	attachmentURLPath := "/attachments"
+	r.StaticFS(attachmentURLPath, http.Dir("./attachments"))
 
-	// 加载附件目录
-	r.StaticFS(attachmentDir, http.Dir("."+attachmentDir))
+	attachmentDir := attachmentURLPath
 
 	// 加载模板
 	r.LoadHTMLGlob("./tpl/*")

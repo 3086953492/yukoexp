@@ -446,34 +446,33 @@ func AddExpenseReport(expenseReport *New_reports, userID int, username string, h
 	if hasAttachment == 1 {
 		err := tools.UploadAttachments(reportID, expenseReport.Attachments, attachmentDir)
 		if err != nil {
-			// 如果附件上传失败，删除刚刚插入的报销单记录
 			database.Gdb.Exec(`DELETE FROM expense_reports WHERE report_id = ?`, reportID)
+			_ = os.RemoveAll(tools.AttachmentReportDir(reportID, attachmentDir))
 			return 0, errors.New("附件上传失败，报销单已删除: " + err.Error())
 		}
 
-		// 更新数据库中附件标记
 		updateSQL := `UPDATE expense_reports SET has_attachment = 1 WHERE report_id = ?`
 		updateResult := database.Gdb.Exec(updateSQL, reportID)
 		if updateResult.Error != nil {
-			// 如果更新失败，删除刚刚插入的报销单记录
 			database.Gdb.Exec(`DELETE FROM expense_reports WHERE report_id = ?`, reportID)
+			_ = os.RemoveAll(tools.AttachmentReportDir(reportID, attachmentDir))
 			return 0, errors.New("更新附件标志失败，报销单已删除: " + updateResult.Error.Error())
 		}
 	}
 
-	// 通过飞书通知管理员
-	uuid, err := tools.GetUuid()
-	if err != nil {
-		return 0, err
-	}
+	// // 通过飞书通知管理员
+	// uuid, err := tools.GetUuid()
+	// if err != nil {
+	// 	return 0, err
+	// }
 
-	text := fmt.Sprintf("%s 提交了新的报销单，请及时处理\nyukoexp.com", username)
+	// text := fmt.Sprintf("%s 提交了新的报销单，请及时处理\nyukoexp.com", username)
 
-	err = lark.SendText("ou_361a84bb42e1210aafb90cc262e6ef77", uuid, text)
-	if err != nil {
+	// err = lark.SendText("ou_361a84bb42e1210aafb90cc262e6ef77", uuid, text)
+	// if err != nil {
 
-		return 0, errors.New("飞书通知管理员失败！\n请手动通知管理员！并向开发人员反馈失败原因！\n: " + err.Error())
-	}
+	// 	return 0, errors.New("飞书通知管理员失败！\n请手动通知管理员！并向开发人员反馈失败原因！\n: " + err.Error())
+	// }
 
 	// 返回报销单ID
 	return reportID, nil

@@ -85,7 +85,7 @@
                                             <label
                                                 class="block uppercase tracking-wide text-gray-700 text-xs font-light mb-1"
                                                 for="attachments">
-                                                上传附件 (支持文件选择或直接Ctrl+V粘贴)
+                                                上传附件（可多次选择，会累积；支持 Ctrl+V 粘贴图片）
                                             </label>
                                             <input
                                                 class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
@@ -141,6 +141,14 @@
                             this.blur(); // 使日期选择器失去焦点，从而自动关闭
                         });
 
+                        // 多次打开文件对话框时，浏览器会整批替换 input.files；用列表累积，避免只剩最后一次选的文件
+                        const attachmentStash = [];
+                        function syncAttachmentInput() {
+                            const input = document.getElementById('attachments');
+                            const dt = new DataTransfer();
+                            attachmentStash.forEach(function (f) { dt.items.add(f); });
+                            input.files = dt.files;
+                        }
 
                         document.getElementById('addExpenseForm').addEventListener('submit', function (event) {
                             event.preventDefault();
@@ -269,23 +277,18 @@
 
                         // 移除文件的通用函数
                         function removeFile(fileToRemove, element) {
-                            const input = document.getElementById('attachments');
-                            const dt = new DataTransfer();
-                            
-                            // 重新构建FileList，排除被删除的文件
-                            Array.from(input.files).forEach(file => {
-                                if (file !== fileToRemove) {
-                                    dt.items.add(file);
-                                }
-                            });
-                            
-                            input.files = dt.files;
+                            const i = attachmentStash.indexOf(fileToRemove);
+                            if (i !== -1) attachmentStash.splice(i, 1);
+                            syncAttachmentInput();
                             element.remove();
                         }
 
                         // 监听文件选择
                         document.getElementById('attachments').addEventListener('change', function(event) {
-                            handleFiles(this.files);
+                            const incoming = Array.from(this.files);
+                            incoming.forEach(function (f) { attachmentStash.push(f); });
+                            syncAttachmentInput();
+                            handleFiles(incoming);
                         });
 
                         // 监听粘贴事件
@@ -297,18 +300,9 @@
                                     const file = items[i].getAsFile();
                                     const fileName = `pasted-image-${new Date().getTime()}.png`;
                                     const newFile = new File([file], fileName, { type: file.type });
-                                    
-                                    // 将新文件添加到现有文件列表中
-                                    const dt = new DataTransfer();
-                                    const input = document.getElementById('attachments');
-                                    
-                                    // 添加现有文件
-                                    Array.from(input.files).forEach(f => dt.items.add(f));
-                                    // 添加新粘贴的文件
-                                    dt.items.add(newFile);
-                                    
-                                    input.files = dt.files;
-                                    handleFiles([newFile]); // 只处理新粘贴的文件
+                                    attachmentStash.push(newFile);
+                                    syncAttachmentInput();
+                                    handleFiles([newFile]);
                                 }
                             }
                         });
